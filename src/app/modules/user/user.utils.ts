@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongoose';
 import { TAcademicSemester } from '../academic-semester/academicSamester-interface';
 import { UserModel } from './user.model';
 
@@ -16,36 +17,31 @@ const findLastStudentId = async () => {
     })
     .lean();
 
-  return  lastStudent?.id ? lastStudent.id.toString().substring(6) : undefined;
+  return  lastStudent?.id ? lastStudent.id : undefined;
 };
 
 //year semesterCode 4 digits number
-export const generateStudentId = async (payload: TAcademicSemester ): Promise<string> => {
+export const generateStudentId = async (payload: TAcademicSemester | any ): Promise<string> => {
    // console.log(await findLastStudentId())
    
-  const currentId = await findLastStudentId() ||  (0).toString();
+  let currentId = (0).toString(); // by default 0000
+
+  const lastStudentId =  await findLastStudentId();
+  const lastStudentSemesterCode = lastStudentId?.substring(4,6);
+  const lastStudentYear = lastStudentId?.substring(0,4);
+  const currentSemesterCode = payload?.code;
+  const currentYear = payload?.year;
+
+  if(lastStudentId && lastStudentSemesterCode === currentSemesterCode && lastStudentYear === currentYear ) {
+    currentId = lastStudentId?.substring(6);
+  }
+
+
+
+
   let incrementId = (Number(currentId) + 1).toString().padStart(4, '0');
   incrementId = `${payload.year}${payload.code}${incrementId}`;
 
   return incrementId;
 };
 
-// export const generateStudentId = async (
-//    academicSemester: TAcademicSemester | null,
-//  ): Promise<string> => {
-//    const currentId =
-//      (await findLastStudentId()) || (0).toString().padStart(4, '0') //00000
-//    //increment by 1
- 
-//    if (!academicSemester) {
-//      throw new Error('Academic semester is null')
-//    }
- 
-//    let incrementedId = (parseInt(currentId) + 1).toString().padStart(4, '0')
-//    //20 25
-//    incrementedId = `${academicSemester.year.substring(2)}${
-//      academicSemester.code
-//    }${incrementedId}`
- 
-//    return incrementedId
-//  }
