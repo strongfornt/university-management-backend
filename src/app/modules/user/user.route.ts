@@ -6,7 +6,8 @@ import express, {
 } from 'express';
 import { userController } from './user.controller';
 import { validationMiddleware } from '../../middleware/validateRequest';
-import createStudentZodValidationSchema from '../student/student.zod.validaton';
+import { createStudentZodValidationSchema } from '../student/student.zod.validaton';
+
 
 const router = express.Router();
 

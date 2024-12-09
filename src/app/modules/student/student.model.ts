@@ -91,11 +91,18 @@ const studentSchema = new Schema<TStudent>({
   isDeleted: {
     type: Boolean,
     default: false,
+  },
+  academicDepartment: {
+    type: Schema.Types.ObjectId,
+    ref: 'AcademicDepartment',
   }
 },
 {versionKey: false});
 
-
+studentSchema.statics.isStudentExist = async function (id: string) {
+  const existingStudent = await StudentModel.findOne({id});
+  return existingStudent
+}
 
 
 //model for

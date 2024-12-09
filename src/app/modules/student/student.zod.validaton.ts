@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // UserName Schema
-const userNameSchema = z.object({
+const createUserNameSchema = z.object({
   firstName: z
     .string()
     .max(20, 'First name cannot be more than 20 characters')
@@ -21,7 +21,7 @@ const userNameSchema = z.object({
 });
 
 // Guardian Schema
-const guardianSchema = z.object({
+const createGuardianSchema = z.object({
   fatherName: z.string().nonempty('Father name is required'),
   fatherOccupation: z.string().nonempty('Father occupation is required'),
   fatherContactNo: z.string().nonempty('Father contact number is required'),
@@ -31,7 +31,7 @@ const guardianSchema = z.object({
 });
 
 // Local Guardian Schema
-const localGuardianSchema = z.object({
+const createLocalGuardianSchema = z.object({
   name: z.string().nonempty('Local guardian name is required'),
   occupation: z.string().nonempty('Occupation is required'),
   contactNo: z.string().nonempty('Contact number is required'),
@@ -43,7 +43,7 @@ const createStudentZodValidationSchema = z.object({
   body: z.object({
     password: z.string().max(20),
     student: z.object({
-      name: userNameSchema,
+      name: createUserNameSchema,
       gender: z.enum(['male', 'female', 'other']),
       dateOfBirth: z.string().optional(),
       email: z.string().email(),
@@ -52,13 +52,38 @@ const createStudentZodValidationSchema = z.object({
       bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']),
       presentAddress: z.string(),
       permanentAddress: z.string(),
-      localGuardian: localGuardianSchema,
+      localGuardian: createLocalGuardianSchema,
       profileImg: z.string(),
-      guardian: guardianSchema,
-      admissionSemester:z.string(),
-      isDeleted: z.boolean().default(false)
+      guardian: createGuardianSchema,
+      admissionSemester: z.string(),
+      isDeleted: z.boolean().default(false),
     }),
   }),
 });
 
-export default createStudentZodValidationSchema;
+// Update Validation Schema
+const updateStudentZodValidationSchema = z.object({
+  body: z.object({
+    // password: z.string().max(20).optional(),
+    student: z
+      .object({
+        name: createUserNameSchema.partial(),
+        gender: z.enum(['male', 'female', 'other']).optional(),
+        dateOfBirth: z.string().optional(),
+        email: z.string().email().optional(),
+        contactNo: z.string().optional(),
+        emergencyContactNo: z.string().optional(),
+        bloodGroup: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
+        presentAddress: z.string().optional(),
+        permanentAddress: z.string().optional(),
+        localGuardian: createLocalGuardianSchema.partial(),
+        profileImg: z.string().optional(),
+        guardian: createGuardianSchema.partial(),
+        admissionSemester: z.string().optional(),
+        isDeleted: z.boolean().optional(),
+      })
+      .partial(),
+  }),
+});
+
+export { createStudentZodValidationSchema, updateStudentZodValidationSchema };
