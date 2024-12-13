@@ -99,6 +99,11 @@ const studentSchema = new Schema<TStudent>({
 },
 {versionKey: false});
 
+//virtual
+studentSchema.virtual('fullName').get(function () {
+  return this?.name?.firstName + this?.name?.middleName + this?.name?.lastName;
+});
+
 studentSchema.statics.isStudentExist = async function (id: string) {
   const existingStudent = await StudentModel.findOne({id});
   return existingStudent

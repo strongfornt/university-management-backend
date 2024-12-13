@@ -9,9 +9,9 @@ const router = express.Router();
 router
   .route('/create-academic-department')
   .post(
-    validationMiddleware(
-      AcademicDepartmentValidation.createAcademicDepartmentZodSchema,
-    ),
+    // validationMiddleware(
+    //   AcademicDepartmentValidation.createAcademicDepartmentZodSchema,
+    // ),
     AcademicDepartmentController.createAcademicDepartment,
   );
 

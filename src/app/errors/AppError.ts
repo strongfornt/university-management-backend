@@ -1,6 +1,6 @@
 class AppError extends Error {
     constructor(
-      public status: number,
+      public statusCode: number,
       message: string,
       stack = '',
     ) {
