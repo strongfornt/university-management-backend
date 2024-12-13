@@ -10,7 +10,7 @@ router.route('/')
     // .post(StudentControllers.createStudent)
 
 
-router.route('/:studentId')
+router.route('/:id')
        .get(StudentControllers.getSingleStudent)
        .delete(StudentControllers.deleteStudent)
        .patch(
