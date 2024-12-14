@@ -20,7 +20,8 @@ const createStudent = catchAsync( async (
     });
 });
 const createFaculty = catchAsync(async (req, res) => {
-  const { password, faculty: facultyData } = req.body;
+  const {body}= req.body;
+  const { password, faculty: facultyData } = body;
 
   const result = await UserService.createFacultyIntoDB(password, facultyData);
 
@@ -33,7 +34,8 @@ const createFaculty = catchAsync(async (req, res) => {
 });
 
 const createAdmin = catchAsync(async (req, res) => {
-  const { password, admin: adminData } = req.body;
+  const {body}= req.body;
+  const { password, admin: adminData } = body;
 
   const result = await UserService.createAdminIntoDB(password, adminData);
 
@@ -49,4 +51,6 @@ const createAdmin = catchAsync(async (req, res) => {
 
 export const userController = {
   createStudent,
+  createAdmin,
+  createFaculty
 };
