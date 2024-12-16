@@ -21,36 +21,49 @@ const createSemesterRegistration = catchAsync( async (
       data: result,
     });
 });
-// const createFaculty = catchAsync(async (req, res) => {1
-//   const {body}= req.body;
-//   const { password, faculty: facultyData } = body;
 
-//   const result = await SemesterRegistrationController.createFacultyIntoDB(password, facultyData);
+const getAllSemesterRegistration = catchAsync(async (req, res, next) => {
 
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Faculty is created successfully',
-//     data: result,
-//   });
-// });
+  const result = await SemesterRegistrationService.getAllSemesterRegistrationFromDB(req.query);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'Semester registration are retrieved successfully',
+    data: result,
+  });
+});
 
-// const createAdmin = catchAsync(async (req, res) => {
-//   const {body}= req.body;
-//   const { password, admin: adminData } = body;
 
-//   const result = await UserService.createAdminIntoDB(password, adminData);
+const getSingleSemesterRegistration = catchAsync(async (req, res, next) => {
+  const {id} = req.params;
+  const result = await SemesterRegistrationService.getSingleSemesterRegistrationFromDB(id);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'SemesterRegistration is retrieved successfully',
+    data: result,
+  })
+})
+const updateSemesterRegistration = catchAsync(async (req, res, next) => {
+  const {id} = req.params;
+  const {body} = req.body;
+  const result = await SemesterRegistrationService.updateSemesterRegistrationIntoDB(id,body);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'SemesterRegistration is retrieved successfully',
+    data: result,
+  })
+})
 
-//   sendResponse(res, {
-//     statusCode: 200,
-//     success: true,
-//     message: 'Admin is created successfully',
-//     data: result,
-//   });
-// });
 
 
 
 export const SemesterRegistrationController = {
-    createSemesterRegistration
+    createSemesterRegistration,
+    getAllSemesterRegistration,
+    getSingleSemesterRegistration,
+    updateSemesterRegistration
+    // createFaculty,
+    // createAdmin
 }
