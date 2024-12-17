@@ -120,6 +120,25 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   return result;
 };
 
+
+const updateOfferedCourseIntoDB = async (id: string, payload: Partial<TOfferedCourse>) => {
+
+  const {faculty} = payload;
+
+    const isOfferedCourseExits = await OfferedCourseModel.findById(id);
+
+    if(!isOfferedCourseExits) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found!');
+    }
+    const isFacultyExits = await OfferedCourseModel.findById(id);
+
+    if(!isFacultyExits) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found!');
+    }
+
+}
+
 export const OfferedCourseServices = {
   createOfferedCourseIntoDB,
+  updateOfferedCourseIntoDB,
 };
