@@ -8,6 +8,7 @@ import { AcademicDepartmentModel } from '../academic-department/academic-departm
 import { CourseModel } from '../course/course.model';
 import { Faculty } from '../Faculty/faculty.model';
 import { hasTimeConflict } from './offered-course.utils';
+import QueryBuilder from '../../builder/Query.builder';
 
 const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   const {
@@ -120,25 +121,119 @@ const createOfferedCourseIntoDB = async (payload: TOfferedCourse) => {
   return result;
 };
 
+const updateOfferedCourseIntoDB = async (
+  id: string,
+  payload: Pick<TOfferedCourse, 'faculty' | 'days' | 'startTime' | 'endTime'>,
+) => {
+  const { faculty, days, startTime, endTime } = payload;
 
-const updateOfferedCourseIntoDB = async (id: string, payload: Partial<TOfferedCourse>) => {
+  const isOfferedCourseExits = await OfferedCourseModel.findById(id);
 
-  const {faculty} = payload;
+  if (!isOfferedCourseExits) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found!');
+  }
 
-    const isOfferedCourseExits = await OfferedCourseModel.findById(id);
+  const isFacultyExits = await OfferedCourseModel.findById(id);
 
-    if(!isOfferedCourseExits) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found!');
-    }
-    const isFacultyExits = await OfferedCourseModel.findById(id);
+  if (!isFacultyExits) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found!');
+  }
 
-    if(!isFacultyExits) {
-      throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found!');
-    }
+  const semesterRegistration = isOfferedCourseExits?.semesterRegistration;
 
-}
+  const semesterRegistrationStatus =
+    await SemesterRegistrationModel.findById(semesterRegistration);
+
+  if (semesterRegistrationStatus?.status !== 'UPCOMING') {
+    throw new AppError(
+      StatusCodes.BAD_REQUEST,
+      `You cannot update this offered course as it is ${semesterRegistrationStatus?.status} `,
+    );
+  }
+
+  //get the schedules of faculties
+  const assignedSchedule = await OfferedCourseModel.find({
+    semesterRegistration,
+    faculty,
+    days: { $in: days },
+  }).select('days startTime endTime');
+
+  const newSchedule = {
+    days,
+    startTime,
+    endTime,
+  };
+
+  if (hasTimeConflict(assignedSchedule, newSchedule)) {
+    throw new AppError(
+      StatusCodes.CONFLICT,
+      'This Faculty is not available at that time! choose other time or day',
+    );
+  }
+
+  const result = await OfferedCourseModel.findByIdAndUpdate(id, payload, {
+    new: true,
+  });
+
+  return result;
+};
+
+const getAllOfferedCoursesFromDB = async (query: Record<string, unknown>) => {
+  const offeredCourseQuery = new QueryBuilder(OfferedCourseModel.find(), query)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await offeredCourseQuery.modelQuery;
+  return result;
+};
+
+const getSingleOfferedCourseFromDB = async (id: string) => {
+  const offeredCourse = await OfferedCourseModel.findById(id);
+
+  if (!offeredCourse) {
+    throw new AppError(404, 'Offered Course not found');
+  }
+
+  return offeredCourse;
+};
+
+const deleteOfferedCourseFromDB = async (id: string) => {
+  /**
+   * Step 1: check if the offered course exists
+   * Step 2: check if the semester registration status is upcoming
+   * Step 3: delete the offered course
+   */
+  const isOfferedCourseExists = await OfferedCourseModel.findById(id);
+
+  if (!isOfferedCourseExists) {
+    throw new AppError(StatusCodes.NOT_FOUND, 'Offered Course not found');
+  }
+
+  const semesterRegistration = isOfferedCourseExists.semesterRegistration;
+
+  const semesterRegistrationStatus =
+    await SemesterRegistrationModel.findById(semesterRegistration).select('status');
+
+  if (semesterRegistrationStatus?.status !== 'UPCOMING') {
+    throw new AppError(
+     StatusCodes.BAD_REQUEST,
+      `Offered course can not update ! because the semester ${semesterRegistrationStatus}`,
+    );
+  }
+
+  const result = await OfferedCourseModel.findByIdAndDelete(id);
+
+  return result;
+};
+
+
 
 export const OfferedCourseServices = {
   createOfferedCourseIntoDB,
   updateOfferedCourseIntoDB,
+  getAllOfferedCoursesFromDB,
+  getSingleOfferedCourseFromDB,
+  deleteOfferedCourseFromDB,
 };
