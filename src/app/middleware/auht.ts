@@ -5,8 +5,9 @@ import { StatusCodes } from 'http-status-codes';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import config from '../config';
 import { TUserRole } from '../modules/user/user.interface';
+import { UserModel } from '../modules/user/user.model';
 
-export const authMiddleware = (...requiredRoles: TUserRole[]) => {
+const authMiddleware = (...requiredRoles: TUserRole[]) => {
   return catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     const token = req.headers.authorization;
 
@@ -15,30 +16,50 @@ export const authMiddleware = (...requiredRoles: TUserRole[]) => {
       throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
     }
 
-    jwt.verify(
+    //checking if the given token is valid
+    const decoded = jwt.verify(
       token,
       config.jwt_access_secret as string,
-      function (err, decoded) {
-        // err
-        if (err) {
-          throw new AppError(
-            StatusCodes.UNAUTHORIZED,
-            'You are not authorized!',
-          );
-        }
+    ) as JwtPayload;
+    const { role, userId, iat } = decoded;
 
-        const role = (decoded as JwtPayload).role
-        
-        if(requiredRoles && !requiredRoles.includes(role)) {
-          throw new AppError(
-            StatusCodes.UNAUTHORIZED,
-            'You are not authorized!',
-          );
-        }
+    const isUserExists = await UserModel.isUserExistsByCustomId(userId);
 
-        req.user = decoded as JwtPayload;
-        next();
-      },
-    );
+    if (!isUserExists) {
+      throw new AppError(StatusCodes.NOT_FOUND, 'This user is not found!');
+    }
+
+    //checking if the user already deleted
+    const isDeleted = isUserExists?.isDeleted;
+
+    if (isDeleted) {
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user is deleted!');
+    }
+    //checking if the user status blocked
+    const userStatus = isUserExists?.status;
+
+    if (userStatus === 'blocked') {
+      throw new AppError(StatusCodes.FORBIDDEN, 'This user is blocked!');
+    }
+
+
+    if (
+      isUserExists.passwordChangeAt &&
+      await UserModel.isJWTIssuedBeforePasswordChanged(
+        isUserExists.passwordChangeAt,
+        iat as number,
+      ) 
+    ) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
+    }
+
+    if (requiredRoles && !requiredRoles.includes(role)) {
+      throw new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!');
+    }
+
+    req.user = decoded as JwtPayload;
+    next();
   });
 };
+
+export default authMiddleware;

@@ -6,18 +6,21 @@ import config from '../../config';
 const userSchema = new Schema<TUser, UserModelInterFace>(
   {
     id: {
-      type: String  ,
+      type: String,
       required: true,
-      unique:true
+      unique: true,
     },
     password: {
       type: String,
       required: true,
-      select: 0
+      select: 0,
     },
     needsPasswordChange: {
       type: Boolean,
       default: true,
+    },
+    passwordChangeAt: {
+      type: Date,
     },
     role: {
       type: String,
@@ -35,30 +38,45 @@ const userSchema = new Schema<TUser, UserModelInterFace>(
   },
   {
     timestamps: true,
-    versionKey:false
+    versionKey: false,
   },
 );
 
-userSchema.pre('save', async function(next){
-  
+userSchema.pre('save', async function (next) {
   const user = this;
-//hashing pass and save into db
-user.password = await bcrypt.hash(user.password, Number(config.bcrypt_salt_round));
-next();
-  
-})
+  //hashing pass and save into db
+  user.password = await bcrypt.hash(
+    user.password,
+    Number(config.bcrypt_salt_round),
+  );
+  next();
+});
 
-userSchema.post('save', function(doc,next) {
-  doc.password=''
-  next()
-})
+userSchema.post('save', function (doc, next) {
+  doc.password = '';
+  next();
+});
 
-userSchema.statics.isUserExistsByCustomId = async function(id: string) {
-  return await this.findOne({ id });
+userSchema.statics.isUserExistsByCustomId = async function (id: string) {
+  return await this.findOne({ id }).select('+password');
 };
 
-userSchema.statics.isPasswordMatched = async function(plainTextPass, hashTextPass) {
- return await bcrypt.compare(plainTextPass, hashTextPass)
-}
+userSchema.statics.isPasswordMatched = async function (
+  plainTextPass,
+  hashTextPass,
+) {
+  return await bcrypt.compare(plainTextPass, hashTextPass);
+};
+
+userSchema.statics.isJWTIssuedBeforePasswordChanged = async function (
+  passChangeTimeStamp: Date,
+  jwtIssuedTimeStamp: number,
+) {
+  const passwordChangedTime = new Date(passChangeTimeStamp).getTime() / 1000;
+ const time = passwordChangedTime > jwtIssuedTimeStamp
+  // console.log('from 77', time);
+  
+  return time;
+};
 
 export const UserModel = model<TUser, UserModelInterFace>('User', userSchema);

@@ -9,8 +9,9 @@ import { validationMiddleware } from '../../middleware/validateRequest';
 import { createStudentZodValidationSchema } from '../student/student.zod.validaton';
 import { createFacultyValidationSchema } from '../Faculty/faculty.validation';
 import { createAdminValidationSchema } from '../Admin/admin.zod.validation';
-import { authMiddleware } from '../../middleware/auht';
+// import { authMiddleware } from '../../middleware/auht';
 import { USER_ROLE } from './user.constant';
+import authMiddleware from '../../middleware/auht';
 
 
 const router = express.Router();
