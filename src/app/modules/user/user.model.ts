@@ -13,6 +13,7 @@ const userSchema = new Schema<TUser, UserModelInterFace>(
     password: {
       type: String,
       required: true,
+      select: 0
     },
     needsPasswordChange: {
       type: Boolean,
