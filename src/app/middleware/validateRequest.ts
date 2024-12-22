@@ -8,6 +8,7 @@ export const validationMiddleware = (schema: AnyZodObject) => {
 
     await schema.parseAsync({
       body: body,
+      cookies: req.cookies
     });
     next();
   });
